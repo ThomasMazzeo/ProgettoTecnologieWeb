@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 scelteSerata.luogo = this.getAttribute('data-choice');
 
                 // === INSERISCI QUI IL TUO LINK FORMSPREE ===
-                fetch("INSERISCI_QUI_IL_TUO_LINK_FORMSPREE", {
+                fetch("https://formspree.io/f/mbdergoe", {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "Accept": "application/json" },
                     body: JSON.stringify(scelteSerata)
