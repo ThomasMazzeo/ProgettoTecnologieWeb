@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Capisce se si sta usando un telefono (Touchscreen)
+    
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-    // --- 0. EFFETTO STELLE CADENTI SFONDO (Funziona ovunque) ---
+    
     const starsContainer = document.getElementById('stars-container');
 
     for (let i = 0; i < 25; i++) {
@@ -26,29 +26,47 @@ document.addEventListener('DOMContentLoaded', () => {
         starsContainer.appendChild(star);
     }
 
-    // --- 1. LOGICA DEL BOTTONE "NO" CHE SCAPPA (Ottimizzato per PC e Telefono) ---
+    
     const btnNo = document.getElementById('btn-no');
 
     function muoviBottone(e) {
         if(e && e.type === 'touchstart') {
-            e.preventDefault(); // Evita che il telefono registri il tocco come un click
+            e.preventDefault(); 
         }
+
+        
+        const rect = btnNo.getBoundingClientRect();
+        const currentX = rect.left;
+        const currentY = rect.top;
+
+        
         btnNo.style.position = 'fixed';
 
-        // Calcola spazio tenendo conto dei bordi dello schermo per non farlo uscire fuori
-        const randomX = Math.max(10, Math.random() * (window.innerWidth - btnNo.offsetWidth - 20));
-        const randomY = Math.max(10, Math.random() * (window.innerHeight - btnNo.offsetHeight - 20));
+        
+        const distance = Math.random() * 200 + 80;
 
-        btnNo.style.left = `${randomX}px`;
-        btnNo.style.top = `${randomY}px`;
+        
+        const angle = Math.random() * Math.PI * 2;
+
+       
+        let newX = currentX + (Math.cos(angle) * distance);
+        let newY = currentY + (Math.sin(angle) * distance);
+
+        
+        newX = Math.max(10, Math.min(newX, window.innerWidth - btnNo.offsetWidth - 20));
+        newY = Math.max(10, Math.min(newY, window.innerHeight - btnNo.offsetHeight - 20));
+
+        
+        btnNo.style.left = `${newX}px`;
+        btnNo.style.top = `${newY}px`;
     }
 
-    // Scappa quando ci passi col mouse (PC)
+    
     btnNo.addEventListener('mouseover', muoviBottone);
-    // Scappa quando provi a toccarlo con il dito (Telefono)
+    
     btnNo.addEventListener('touchstart', muoviBottone, {passive: false});
 
-    // --- 2. NAVIGAZIONE TRA GLI STEP E INVIO DATI ---
+   
     const btnYes = document.getElementById('btn-yes');
     const nextButtons = document.querySelectorAll('.next-btn');
 
@@ -96,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 scelteSerata.luogo = this.getAttribute('data-choice');
 
                 // === INSERISCI QUI IL TUO LINK FORMSPREE ===
-                fetch("https://formspree.io/f/mbdergoe", {
+                fetch("INSERISCI_QUI_IL_TUO_LINK_FORMSPREE", {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "Accept": "application/json" },
                     body: JSON.stringify(scelteSerata)
@@ -109,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- 3. SELEZIONE DEL CIBO ---
+    
     const foodItems = document.querySelectorAll('.food-item');
     foodItems.forEach(item => {
         item.addEventListener('click', function() {
@@ -118,8 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- 4. EFFETTO CURSORE SCINTILLA (SOLO SU PC) ---
-    // Se siamo su un telefono, non carichiamo le scintille al tocco per non sporcare lo schermo
+    
     if (!isTouchDevice) {
         const customCursor = document.getElementById('custom-cursor');
         let lastTime = 0;
