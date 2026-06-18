@@ -1,9 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Capisce se si sta usando un telefono (Touchscreen)
+    
+    const LINK_FORMSPREE = "https://formspree.io/f/mbdergoe";
+
+   
+    const tempoInizio = Date.now(); // Registra il momento in cui la pagina viene aperta
+    let contatoreSpostamentiNo = 0; // Inizializza il contatore degli spostamenti
+    // ==========================================
+
+    
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-    // --- 0. EFFETTO STELLE CADENTI SFONDO (Funziona ovunque) ---
+    
     const starsContainer = document.getElementById('stars-container');
 
     for (let i = 0; i < 25; i++) {
@@ -26,50 +34,44 @@ document.addEventListener('DOMContentLoaded', () => {
         starsContainer.appendChild(star);
     }
 
-    // --- 1. LOGICA DEL BOTTONE "NO" CHE SCAPPA (Nuova logica per spostamenti corti) ---
+    // --- 1. LOGICA DEL BOTTONE "NO" CHE SCAPPA ---
     const btnNo = document.getElementById('btn-no');
 
     function muoviBottone(e) {
         if(e && e.type === 'touchstart') {
-            e.preventDefault(); // Evita che il telefono registri il tocco come un click
+            e.preventDefault();
         }
 
-        // Prende la posizione esatta del bottone in questo momento
+        // Aumentiamo il contatore di 1 ogni volta che scappa
+        contatoreSpostamentiNo++;
+
         const rect = btnNo.getBoundingClientRect();
         const currentX = rect.left;
         const currentY = rect.top;
 
-        // Imposta la posizione fissa senza farlo "saltare" via subito
         btnNo.style.position = 'fixed';
 
-        // Scegliamo una distanza corta (tra gli 80 e i 150 pixel)
         const distance = Math.random() * 200 + 80;
-
-        // Scegliamo una direzione a 360 gradi a caso
         const angle = Math.random() * Math.PI * 2;
 
-        // Calcoliamo le nuove coordinate vicine
         let newX = currentX + (Math.cos(angle) * distance);
         let newY = currentY + (Math.sin(angle) * distance);
 
-        // Ci assicuriamo comunque che non esca MAI dai bordi dello schermo
         newX = Math.max(10, Math.min(newX, window.innerWidth - btnNo.offsetWidth - 20));
         newY = Math.max(10, Math.min(newY, window.innerHeight - btnNo.offsetHeight - 20));
 
-        // Applichiamo la nuova posizione (che grazie al CSS sarà lenta e morbida)
         btnNo.style.left = `${newX}px`;
         btnNo.style.top = `${newY}px`;
     }
 
-    // Scappa quando ci passi col mouse (PC)
     btnNo.addEventListener('mouseover', muoviBottone);
-    // Scappa quando provi a toccarlo con il dito (Telefono)
     btnNo.addEventListener('touchstart', muoviBottone, {passive: false});
 
     // --- 2. NAVIGAZIONE TRA GLI STEP E INVIO DATI ---
     const btnYes = document.getElementById('btn-yes');
     const nextButtons = document.querySelectorAll('.next-btn');
 
+    // Oggetto che raccoglierà le scelte finali (Seconda Email)
     let scelteSerata = { data: '', ora: '', cibo: '', luogo: '' };
 
     function goToStep(currentStepId, nextStepId) {
@@ -80,11 +82,35 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(nextStepId).classList.add('active');
     }
 
+    
     btnYes.addEventListener('click', () => {
+        // Calcola il tempo
+        const tempoFine = Date.now();
+        const secondiPassati = ((tempoFine - tempoInizio) / 1000).toFixed(1);
+
+        // Prepariamo i dati per la PRIMA email
+        const datiPrimaEmail = {
+            Fase: "Ha detto SI! 🎉",
+            Spostamenti_tasto_NO: contatoreSpostamentiNo + " volte",
+            Tempo_per_decidersi: secondiPassati + " secondi"
+        };
+
+        
+        if(LINK_FORMSPREE !== "INSERISCI_QUI_IL_TUO_LINK_FORMSPREE") {
+            fetch(LINK_FORMSPREE, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                body: JSON.stringify(datiPrimaEmail)
+            })
+            .then(() => console.log("Prima email inviata (Statistiche)!"))
+            .catch(error => console.log("Errore prima email", error));
+        }
+
         btnNo.style.position = 'static';
         goToStep('step-1', 'step-2');
     });
 
+    // === GESTIONE DEGLI ALTRI STEP E SECONDA EMAIL ===
     nextButtons.forEach(button => {
         button.addEventListener('click', function() {
             const currentStep = this.closest('.step-section').id;
@@ -94,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const date = document.getElementById('date-picker').value;
                 const time = document.getElementById('time-picker').value;
                 if(!date || !time) {
-                    alert("Prima inserisci un giorno ed un ora! 🥺");
+                    alert("Prima inserisci un giorno ed un'ora! 🥺");
                     return;
                 }
                 scelteSerata.data = date;
@@ -110,17 +136,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 scelteSerata.cibo = selectedFood.innerText;
             }
 
+            
             if(currentStep === 'step-5') {
                 scelteSerata.luogo = this.getAttribute('data-choice');
 
-                // === INSERISCI QUI IL TUO LINK FORMSPREE ===
-                fetch("https://formspree.io/f/mbdergoe", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-                    body: JSON.stringify(scelteSerata)
-                })
-                    .then(response => console.log("Email inviata!"))
-                    .catch(error => console.log("Errore", error));
+                const datiSecondaEmail = {
+                    Fase: "Dettagli Appuntamento! 🍾",
+                    Giorno: scelteSerata.data,
+                    Ora: scelteSerata.ora,
+                    Cibo: scelteSerata.cibo,
+                    Luogo: scelteSerata.luogo
+                };
+
+                
+                if(LINK_FORMSPREE !== "INSERISCI_QUI_IL_TUO_LINK_FORMSPREE") {
+                    fetch(LINK_FORMSPREE, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                        body: JSON.stringify(datiSecondaEmail)
+                    })
+                    .then(() => console.log("Seconda email inviata (Scelte finali)!"))
+                    .catch(error => console.log("Errore seconda email", error));
+                }
             }
 
             goToStep(currentStep, nextStep);
